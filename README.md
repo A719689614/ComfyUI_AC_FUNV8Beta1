@@ -1,7 +1,6 @@
 # ComfyUI_AC_FUNV8Beta1
 ComfyUIV8巨集指令
-# ComfyUI_AC_FUNV8Beta1
-ComfyUIV8巨集指令
+
 # 一、功能介绍
 针对comfyui进行开发的巨集指令，类似rhino
 
