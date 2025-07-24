@@ -1,0 +1,2 @@
+ugly,deformed,noisy,blurry,low contrast,(worst quality:2,low quality:2),(interlocked fingers,badly drawn hands and fingers, anatomically incorrect hands),EasyNegative,badhandsv5-neg,Subtitles,word,bad-artist bad-artist-anime bad-hands-5 bad-image-v2-39000 bad-picture-chill-75v bad_prompt bad_prompt_version2 badhandv4 NG_DeepNegative_V1_75T EasyNegative2girls,3girls,
+(nsfw:1.3),

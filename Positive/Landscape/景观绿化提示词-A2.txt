@@ -1,0 +1,1 @@
+flowers,A small garden, (small area:1.5), yellow flowers, purple flowers, beautiful plants, clean environment,masterpiece, best quality, <lora:afforest:0.85>

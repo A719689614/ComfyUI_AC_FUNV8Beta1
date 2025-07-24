@@ -3,19 +3,11 @@ import torch
 import os
 import sys
 import json
-# import hashlib
-# import traceback
-# import math
-# import time
 import random
-
-from PIL import Image, ImageOps, ImageSequence
+from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 import numpy as np
-# import safetensors.torch
-
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
-
 
 import comfy.diffusers_load
 import comfy.samplers
@@ -23,25 +15,46 @@ import comfy.sample
 import comfy.sd
 import comfy.utils
 import comfy.controlnet
-
 import comfy.clip_vision
-
 import comfy.model_management
 from comfy.cli_args import args
-
-# import importlib
-
+import base64
 import folder_paths
 import latent_preview
-
+from io import BytesIO
 from .AC_FUN import AC_FUN
-
 from .AC_Main import Checkpoint,AC_CLIPText
 
+def tensor2pil(image):
+    return Image.fromarray(np.clip(255. * image.cpu().numpy().squeeze(), 0, 255).astype(np.uint8))
+
+def pil2tensor(image):
+    return torch.from_numpy(np.array(image).astype(np.float32) / 255.0).unsqueeze(0)
+
+def base64_save(base64_data):
+    data = base64_data.split(",")[1]
+    decoded_data = base64.b64decode(data)
+    image = Image.open(BytesIO(decoded_data))
+    image,mask=load_image_ts(image)
+    return (image,mask)
+
+def load_image_ts(i,white_bg=False):
+    image = i.convert("RGB")
+    image = np.array(image).astype(np.float32) / 255.0
+    image = torch.from_numpy(image)[None,]
+    if 'A' in i.getbands():
+        mask = np.array(i.getchannel('A')).astype(np.float32) / 255.0
+        mask = 1. - torch.from_numpy(mask)
+        if white_bg==True:
+            nw = mask.unsqueeze(0).unsqueeze(-1).repeat(1, 1, 1, 3)
+            image[nw == 1] = 1.0
+    else:
+        mask = torch.zeros((64,64), dtype=torch.float32, device="cpu")
+    return (image,mask)
 
 
 MAX_RESOLUTION = 5277
-
+EXAMPLE = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'example.png')
 def common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent, denoise=1.0, disable_noise=False, start_step=None, last_step=None, force_full_denoise=False):
     latent_image = latent["samples"]
     if disable_noise:
@@ -97,8 +110,7 @@ class AC_Super_KSampler(AC_FUN):
                     "dispatch":(self.Dispatch,),
                     "width": ("INT", {"default": 512, "min": 16, "max": MAX_RESOLUTION, "step": 1}),
                     "height": ("INT", {"default": 768, "min": 16, "max": MAX_RESOLUTION, "step": 1}),
-                    "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096}),
-                    "tips":("STRING", {"default":"AC_FUN超级节点"})
+                    "batch_size": ("INT", {"default": 1, "min": 1, "max": 4096})
                      }
                 }
 
@@ -113,7 +125,7 @@ class AC_Super_KSampler(AC_FUN):
 
 
     def sample(self, model, seed, steps, cfg, sampler_name, scheduler, clip=None,positive=None, negative=None,width = 512, height = 512, batch_size =1,
-                latent_image=None, denoise=1.0, resolution=None,dispatch=None,tips=None):
+                latent_image=None, denoise=1.0, resolution=None,dispatch=None):
         # dispatch
         if dispatch =='Custom':
             latent_image = self.generate(width, height, batch_size)
@@ -157,9 +169,7 @@ class AC_Super_UPKSampler(AC_FUN):
                     "upscale_method": (s.upscale_methods,),
                     "crop": (s.crop_methods,),
                     "width": ("INT", {"default": 1024, "min": 16, "max": MAX_RESOLUTION, "step": 1}),
-                    "height": ("INT", {"default": 1536, "min": 16, "max": MAX_RESOLUTION, "step": 1}),
-                    # "vae": ("VAE", ),
-                    "tips":("STRING", {"default":"AC_FUN超级放大节点"}),
+                    "height": ("INT", {"default": 1536, "min": 16, "max": MAX_RESOLUTION, "step": 1})
                      }
                 }
 
@@ -168,7 +178,7 @@ class AC_Super_UPKSampler(AC_FUN):
 
     def sample(self, model, seed, steps, cfg, sampler_name, scheduler, positive=None, negative=None,samples=None,crop=None,
                width = None, height = None,upscale_method=None,vae=None,
-                latent_image=None, denoise=0.35, tips=None):
+                latent_image=None, denoise=0.35):
         
         s = samples.copy()
         s["samples"] = comfy.utils.common_upscale(samples["samples"], width // 8, height // 8, upscale_method, crop)
@@ -197,6 +207,16 @@ class AC_Super_SaveImage(AC_FUN):
 
     OUTPUT_NODE = True
 
+    @classmethod
+    def convert_base64_to_image(cls,base64_string):
+        # 解码base64字符串为字节流
+        image_bytes = base64.b64decode(base64_string)
+        # 创建BytesIO对象，并将字节流写入其中
+        image_buffer = BytesIO(image_bytes)
+        # 打开图像并返回PIL图像对象
+        image = Image.open(image_buffer)
+        return image
+
     def save_images(self, images=None, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None,samples=None,vae=None):
         images = vae.decode(samples["samples"])
         filename_prefix += self.prefix_append
@@ -222,8 +242,11 @@ class AC_Super_SaveImage(AC_FUN):
                 "type": self.type
             })
             counter += 1
+    
+        results = { "ui": { "images": results } }
 
-        return { "ui": { "images": results } }
+        return results
+        
 
 # 超级显示节点
 class AC_Super_PreviewImage(AC_Super_SaveImage,AC_FUN):
@@ -276,18 +299,19 @@ class AC_SUPER_EmptyLatent(AC_FUN):
             "height": ("INT", {"default": 512, "min": 64, "max": MAX_RESOLUTION, "step": 8}),
             "batch_size": ("INT", {"default": 1, "min": 1, "max": 64}),
             }}
-    RETURN_TYPES = ("LATENT",)
+    RETURN_TYPES = ("LATENT","INT","INT")
+    RETURN_NAMES = ("LATENT","WIDTH","HEIGHT")
     FUNCTION = "generate"
 
     def generate(self, Resolution, Boolean, width, height, batch_size=1):
         if Boolean == "Custom":
             latent = torch.zeros([batch_size, 4, height // 8, width // 8])
-            return ({"samples":latent}, )
+            return ({"samples":latent},width, height, )
         if Boolean == "All_ready":
             str = Resolution
             list = str.split('*')
             width, height = list[0],list[1]
             width, height = int(width),int(height)
-            new_str =f"{width},{height}"
+            # new_str =f"{width},{height}"
             latent = torch.zeros([batch_size, 4, height // 8, width // 8])
-            return ({"samples":latent},new_str )
+            return ({"samples":latent}, width, height)

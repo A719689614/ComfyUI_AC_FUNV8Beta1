@@ -1,0 +1,1 @@
+nsfw,logo,text,EasyNegative,ng_deepnegative_v1_75t,rev2-badprompt,verybadimagenegative_v1.3,negative_hand-neg,mutated hands and fingers,poorly drawn face,extra limb,missing limb,disconnected limbs,malformed hands,ugly,bad-hands-5,(worst quality, low quality, bad_pictures, negative_hand-neg:1.2),facial close-up

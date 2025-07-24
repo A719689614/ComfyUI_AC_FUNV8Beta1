@@ -1,0 +1,1 @@
+ng_deepnegative_v1_75t,badhandv4,(worst quality:2),(low quality:2),(normal quality:2),signature,watermark,username,blurry,lowres,normal quality,((grayscale)),nsfw,car,

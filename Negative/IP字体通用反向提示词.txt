@@ -1,0 +1,1 @@
+ng_deepnegative_v1_75t,paintings,sketches,lowres,((monochrome)),(grayscale:1.2),(watermark:1.2),(letters:1.2),(nsfw:1.2),toplessng_deepnegative_v1_75t,EasyNegative,paintings,sketches,(worst quality:2),(low quality:2),(normal quality:2),lowres,((((logo:1.5)))),((text)),nsfw,

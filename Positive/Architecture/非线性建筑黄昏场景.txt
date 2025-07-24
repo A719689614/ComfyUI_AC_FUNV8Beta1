@@ -1,0 +1,2 @@
+(a world of ice and snow,winter:1.6), snowing,  A lot of snow，Frozen Lake, snowing, (Snow_Mountain Background:1.4), (fog:1.4), no human, (night:1.4), (night time:1.4), Curve，(reflective:1.3), building, perspective view,(indoor lighting:1.4), (futuristic:1.4), (blue sky:1.2),(((masterpiece))), (((best quality))), (((ultra-detailed))), Hyper Real, (Photorealistic:1.6), 16K, high detail, high resolution, (extremely detailed:1.4)，(Realistic:1.6), crazy detail, sharp focus, Photo-realistic accuracy,
+ <lora:ASTRA_Nonlinear_V1 非线性异形造型_ASTRA非线性异形造型-V1:1>

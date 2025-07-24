@@ -1,0 +1,1 @@
+3D,c4d,Cube,Triangle,Geometry,geometric aesthetics,New York,masterpiece,best quality,<lora:C D_20230617011627:0.9>,

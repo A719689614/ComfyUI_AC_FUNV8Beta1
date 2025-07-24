@@ -1,0 +1,4 @@
+a group of buildings, CiModern buildings, Residential, glass, window, tree, grass, reflective floor
+sky, light, cloud, evening, sunset,
+(((masterpiece))), (((best quality))), (((ultra-detailed))), Hyper Real, (Photorealistic:1.6), 16K, high detail, high resolution, (extremely detailed:1.4), (Realistic:1.6), crazy detail, sharp focus, Photo-realistic accuracy
+<lora:03_XHQ_1:0.9>

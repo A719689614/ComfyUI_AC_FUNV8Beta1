@@ -1,0 +1,1 @@
+guchen,no humans,table,pillow,indoors,bed,door,carpet,cup,blanket,lamp,window,lying,scenery,wooden floor,plant,plate,<lora:naiyou-000010:0.9>,

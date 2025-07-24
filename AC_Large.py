@@ -1,43 +1,26 @@
 import torch
-
 import os
 import sys
-# import json
-# import hashlib
-# import traceback
-# import math
-# import time
-# import random
-
 from PIL import Image, ImageOps
 from PIL.PngImagePlugin import PngInfo
 import numpy as np
-# import safetensors.torch
-
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.realpath(__file__)), "comfy"))
-
-
 import comfy.diffusers_load
 import comfy.samplers
 import comfy.sample
 import comfy.sd
 import comfy.utils
-
 import comfy.clip_vision
-
 import comfy.model_management
 from comfy.cli_args import args
-
-# import importlib
-
 import folder_paths
 import latent_preview
 from .AC_FUN import AC_FUN
-MAX_RESOLUTION = 5277
 
+MAX_RESOLUTION = 5277
+EXAMPLE = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'example.png')
 
 class VAEEncode:
-
     @staticmethod
     def vae_encode_crop_pixels(pixels):
         x = (pixels.shape[1] // 8) * 8
@@ -130,9 +113,6 @@ class AC_FUN_SUPER_LARGE(AC_FUN,VAEEncode):
             "cfg": ("FLOAT", {"default": 1.4, "min": 0.0, "max": 100.0}),
             "sampler_name": (comfy.samplers.KSampler.SAMPLERS,{"default":"lcm"} ),
             "scheduler": (comfy.samplers.KSampler.SCHEDULERS, ),
-            # "positive": ("CONDITIONING", ),
-            # "negative": ("CONDITIONING", ),
-            # "latent_image": ("LATENT", ),
             "denoise": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.01}),
             "select_model":(self.Select_Model,),
             "image": (files, {"image_upload": True})
@@ -155,7 +135,7 @@ class AC_FUN_SUPER_LARGE(AC_FUN,VAEEncode):
         return model, clip, vae
     
     @classmethod
-    def load_lora(cls, ckpt_name=None,lora_name=None, strength_model=1, strength_clip=1,tips=None):
+    def load_lora(cls, ckpt_name=None,lora_name=None, strength_model=1, strength_clip=1):
         model, clip, vae = cls.load_checkpoint(ckpt_name)
 
         if strength_model == 0 and strength_clip == 0:
@@ -213,8 +193,8 @@ class AC_FUN_SUPER_LARGE(AC_FUN,VAEEncode):
 
     @classmethod
     def load_image(cls, image):
-        image_path = folder_paths.get_annotated_filepath(image)
-        i = Image.open(image_path)
+        image_path = folder_paths.get_annotated_filepath(image) or EXAMPLE
+        i = Image.open(image_path) or EXAMPLE
         i = ImageOps.exif_transpose(i)
         image = i.convert("RGB")
         image = np.array(image).astype(np.float32) / 255.0
@@ -269,7 +249,7 @@ class AC_FUN_SUPER_LARGE(AC_FUN,VAEEncode):
                 latent_image = self.generate(width, height, batch_size)
 
         if select_model == 'Image_to_Image':
-            image = self.load_image(image)
+            image = self.load_image(image) or EXAMPLE
             model, clip, vae = self.load_checkpoint(ckpt_name)
             
             vae_encode = self.vae_encode_crop_pixels(image)
@@ -277,3 +257,5 @@ class AC_FUN_SUPER_LARGE(AC_FUN,VAEEncode):
 
         
         return (model, common_ksampler(model, seed, steps, cfg, sampler_name, scheduler, positive, negative, latent_image, denoise=denoise), positive, negative, width, height, vae)
+
+# AC_FUN_SUPER_LARGE_AERA
