@@ -195,11 +195,18 @@ class AC_Super_SaveImage(AC_FUN):
 
     @classmethod
     def INPUT_TYPES(self):
-        return {"required": 
+        return {
+            "required": 
                     {
-                     "samples": ("LATENT", ), "vae": ("VAE", ),
-                     "filename_prefix": ("STRING", {"default": "ComfyUI"})},
-                "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
+                    #  "samples": ("LATENT", ), "vae": ("VAE", ),
+                     "filename_prefix": ("STRING", {"default": "ComfyUI"})
+                     },
+            "optional": 
+                    {
+                      "samples": ("LATENT", ), 
+                     "vae": ("VAE", ),
+                     "images": ("IMAGE", ),
+                     },
                 }
 
     RETURN_TYPES = ( )
@@ -218,7 +225,10 @@ class AC_Super_SaveImage(AC_FUN):
         return image
 
     def save_images(self, images=None, filename_prefix="ComfyUI", prompt=None, extra_pnginfo=None,samples=None,vae=None):
-        images = vae.decode(samples["samples"])
+        if samples is not None and vae is not None:
+            images = vae.decode(samples["samples"])
+        else:
+            images = images
         filename_prefix += self.prefix_append
         full_output_folder, filename, counter, subfolder, filename_prefix = folder_paths.get_save_image_path(filename_prefix, self.output_dir, images[0].shape[1], images[0].shape[0])
         results = list()
@@ -262,10 +272,11 @@ class AC_Super_PreviewImage(AC_Super_SaveImage,AC_FUN):
 
     @classmethod
     def INPUT_TYPES(self):
-        return {"required":
+        return {"optional":
                     {
                         "samples": ("LATENT", ), 
                         "vae": ("VAE", ),
+                        "images": ("IMAGE", ),
                         },
                 "hidden": {"prompt": "PROMPT", "extra_pnginfo": "EXTRA_PNGINFO"},
                 } 

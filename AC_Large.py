@@ -16,6 +16,7 @@ from comfy.cli_args import args
 import folder_paths
 import latent_preview
 from .AC_FUN import AC_FUN
+from .image_tools import pil2tensor, tensor2pil
 
 MAX_RESOLUTION = 5277
 EXAMPLE = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'example.png')
@@ -89,6 +90,8 @@ class AC_FUN_SUPER_LARGE(AC_FUN,VAEEncode):
     def INPUT_TYPES(self):
         input_dir = folder_paths.get_input_directory()
         files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+        if len(files) == 0:
+            files.append(EXAMPLE)
         return {"required": { 
             "ckpt_name": (folder_paths.get_filename_list("checkpoints"), ),
             "lora_name_1": (folder_paths.get_filename_list("loras"), ),
@@ -193,8 +196,8 @@ class AC_FUN_SUPER_LARGE(AC_FUN,VAEEncode):
 
     @classmethod
     def load_image(cls, image):
-        image_path = folder_paths.get_annotated_filepath(image) or EXAMPLE
-        i = Image.open(image_path) or EXAMPLE
+        image_path = folder_paths.get_annotated_filepath(image)
+        i = Image.open(image_path) or Image.open(EXAMPLE)
         i = ImageOps.exif_transpose(i)
         image = i.convert("RGB")
         image = np.array(image).astype(np.float32) / 255.0
@@ -249,7 +252,9 @@ class AC_FUN_SUPER_LARGE(AC_FUN,VAEEncode):
                 latent_image = self.generate(width, height, batch_size)
 
         if select_model == 'Image_to_Image':
-            image = self.load_image(image) or EXAMPLE
+            image = self.load_image(image)
+            # if not image:
+            #     image = self.load_image(EXAMPLE)
             model, clip, vae = self.load_checkpoint(ckpt_name)
             
             vae_encode = self.vae_encode_crop_pixels(image)

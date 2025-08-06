@@ -25,15 +25,18 @@ import random
 import nodes
 from nodes import MAX_RESOLUTION
 import json
+from .image_tools import tensor2pil, pil2tensor
 
 MAX_RESOLUTION = 5277
 EXAMPLE = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'example.png')
+
 
 class AC_Super_Controlnet(AC_FUN):
     @classmethod
     def INPUT_TYPES(s):
         input_dir = folder_paths.get_input_directory()
         files = [f for f in os.listdir(input_dir) if os.path.isfile(os.path.join(input_dir, f))]
+        files.append(EXAMPLE)
         
         return {"required": {"positive": ("CONDITIONING", ),
                              "negative": ("CONDITIONING", ),
@@ -42,7 +45,9 @@ class AC_Super_Controlnet(AC_FUN):
                              "strength": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 10.0, "step": 0.01}),
                              "start_percent": ("FLOAT", {"default": 0.0, "min": 0.0, "max": 1.0, "step": 0.001}),
                              "end_percent": ("FLOAT", {"default": 1.0, "min": 0.0, "max": 1.0, "step": 0.001})
-                             }}
+                             },
+                "optional":{"source_image":("IMAGE",)}
+                             }
 
     RETURN_TYPES = ("CONDITIONING","CONDITIONING")
     RETURN_NAMES = ("positive", "negative")
@@ -54,7 +59,9 @@ class AC_Super_Controlnet(AC_FUN):
         return controlnet
     
     def load_image(self, image):
-        image_path = folder_paths.get_annotated_filepath(image) or EXAMPLE
+        image_path = folder_paths.get_annotated_filepath(image)
+        if not image_path:
+            image_path = EXAMPLE
         i = Image.open(image_path)
         i = ImageOps.exif_transpose(i)
         image = i.convert("RGB")
@@ -67,9 +74,15 @@ class AC_Super_Controlnet(AC_FUN):
             mask = torch.zeros((64,64), dtype=torch.float32, device="cpu")
         return image
        
-    def apply_controlnet(self, positive, negative, control_net, image, strength, start_percent, end_percent):
+    def apply_controlnet(self, positive, negative, control_net, image, strength, start_percent, end_percent, source_image=None):
         control_net = self.load_controlnet(control_net)
-        image = self.load_image(image) or EXAMPLE
+        if source_image is None:
+            image = self.load_image(image)
+        elif source_image is not None:
+            image = source_image
+        elif source_image is None and image is None :
+            image = tensor2pil(Image.open(EXAMPLE))
+
         if strength == 0:
             return (positive, negative)
 
