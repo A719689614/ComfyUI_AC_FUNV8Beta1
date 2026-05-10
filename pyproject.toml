@@ -12,3 +12,4 @@ Repository = "https://github.com/A719689614/ComfyUI_AC_FUNV8Beta1"
 [tool.comfy]
 PublisherId = "acheng"
 DisplayName = "ComfyUI_AC_FUNV8Beta1"
+Icon = "https://avatars.githubusercontent.com/u/142242136?v=4"
